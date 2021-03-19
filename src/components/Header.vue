@@ -150,7 +150,10 @@
         watch: {
             'currentDriveId': function (newVal, oldVal) {
                 this.$store.commit('updateOldDriveId', oldVal);
-                this.$router.push('/' + newVal + '/main');
+                console.log('oldVal'+oldVal+'------newVal'+newVal)
+                if(oldVal){ // 不判断刷新会自动跳转
+                    this.$router.push('/' + newVal + '/main'); 
+                }
             },
             '$store.getters.newImgMode': function (newVal) {
                 this.imgModel = newVal;
