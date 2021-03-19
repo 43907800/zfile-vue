@@ -20,6 +20,9 @@ Vue.config.productionTip = false;
 
 import axios from 'axios'
 
+import VueCookies from 'vue-cookies'
+Vue.use(VueCookies)
+
 import common from "./common";
 Vue.prototype.common = common;
 

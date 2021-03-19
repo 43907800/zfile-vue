@@ -1,3 +1,7 @@
+import Vue from 'vue';
+import qs from 'qs';
+import VueCookies from 'vue-cookies'
+
 const fileTypeMap = {
     image: ['gif', 'jpg', 'jpeg', 'png', 'bmp', 'webp'],
     video: ['mp4', 'webm', 'm3u8', 'rmvb', 'avi', 'swf', '3gp', 'mkv', 'flv'],
@@ -35,9 +39,9 @@ let common = {
         if (row.type === "BACK") return '';
         if (row.type === "FOLDER") return '-';
         if (bytes === 0) return '0 B';
-        let k = 1024;
-        let sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        let i = Math.floor(Math.log(bytes) / Math.log(k));
+        // let k = 1024;
+        // let sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        // let i = Math.floor(Math.log(bytes) / Math.log(k));
         return common.fileSizeFormat(bytes);
     },
     getFileIconName(file) {
@@ -99,6 +103,27 @@ let common = {
     isMobile() {
         let flag = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)
         return flag || window.innerWidth < 768;
+    },
+    getDriveId() {
+        return window.location.href.substr(window.location.href.indexOf('/#/')+3,2).replace('/','');
+    },
+    getPath() {
+        return window.location.href.substr(window.location.href.indexOf('/main')+6);
+    },
+    findRecord(userName,filePath,status=1) {
+        Vue.prototype.$http.get('record/findUserRecord',{params: {userName: userName, filePath: filePath, status: status}}).then((response) => {
+            let data = response.data;
+            console.log('findRecord',data)
+            return data;
+        })
+    },
+    saveRecord(filePath,fileName) {
+        let username = VueCookies.get("username");
+        if(username == null || username =='') return;
+        Vue.prototype.$http.post('record/save',qs.stringify({userName: username, filePath: filePath, fileName: fileName})).then((response) => {
+            let data = response.data;
+            console.log('saveRecord',data)
+        })
     },
     dateFormat:function(time) {
         let date = new Date(time);

@@ -202,9 +202,13 @@
                 <i class="el-icon-download"></i>
                 <label>下载</label>
             </v-contextmenu-item>
-            <v-contextmenu-item @click="copyShortLink(rightClickRow)" v-show="rightClickRow.type === 'FILE'">
+            <v-contextmenu-item @click="copyShortLink(rightClickRow)" > <!--  v-show="rightClickRow.type === 'FILE'" -->
                 <i class="el-icon-copy-document"></i>
                 <label>生成直链</label>
+            </v-contextmenu-item>
+            <v-contextmenu-item @click="allLink()" v-show="rightClickRow.type === 'FILE'">
+                <i class="el-icon-document"></i>
+                <label>复制全部链接</label>
             </v-contextmenu-item>
         </v-contextmenu>
 
@@ -425,6 +429,8 @@
 
                     let fileType = this.common.getFileType(row.name);
 
+                    if( fileType!= 'audio') this.common.saveRecord(row.path,row.name);
+
                     switch (fileType) {
                         case 'video':
                             this.openVideo();
@@ -545,6 +551,29 @@
             },
             haveDocument() {
                 return this.$store.getters.showDocument && this.$store.state.common.config.readme !== null;
+            },
+            allLink() {
+                let that = this;
+                let fileCount = 0;
+                let allLinkStr = '';
+                this.$store.getters.tableData.map((item)=>{
+                    if(item.type == "FILE"){
+                        let directlink = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/directlink/" + this.driveId + "/" + encodeURI(item.path) + "/" + encodeURI(item.name));
+                        allLinkStr += item.name + "$" +directlink +"\r\n";
+                        fileCount ++;
+                    }
+                })
+                if(fileCount >0){
+                    console.log(allLinkStr)
+                    this.$copyText(allLinkStr).then(function () {
+                        that.$message.success('复制成功,已复制列表文件下载链接!');
+                    }, function () {
+                        that.$message.error('复制失败!');
+                    });
+                }else{
+                    that.$message.error('该列表没有文件!仅可复制文件下载链接.');
+                }
+
             }
         },
         computed: {

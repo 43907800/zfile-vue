@@ -1,6 +1,6 @@
 <template>
     <aplayer v-show="fileList.length > 0 && audioIndex !== -1" ref="aplayer" id="aplyer" fixed
-             :audio="fileList" @listSwitch="updateCover"/>
+             :audio="fileList" @listSwitch="updateCover" loop='none'/>
 </template>
 
 <script>
@@ -18,9 +18,23 @@
         methods: {
             updateCover() {
                 let currentMusic = this.$refs.aplayer.currentMusic;
-                this.$http.get('common/audio-info', {params: {url: currentMusic.url}}).then((response) => {
+                
+                let filePath = currentMusic.path + currentMusic.name;
+                document.title = currentMusic.name;
+                if(this.fileList.length > 0 && this.audioIndex !== -1){
+                    this.common.saveRecord(currentMusic.path,currentMusic.name)
+                }
+                if (currentMusic.updateSrc) return;
+                let driveId = this.common.getDriveId();
+
+                this.$http.get('common/audio-info', {params: {url: currentMusic.url, filePath: filePath, driveId: driveId}}).then((response) => {
                     let data = response.data.data;
                     let el = this.$refs.aplayer.$el;
+                    if (data.src != null && data.src != ''){
+                        this.$refs.aplayer.currentMusic.url = data.src;
+                        this.$refs.aplayer.currentMusic.updateSrc = true;
+                        console.log('更改src')
+                    }
                     el.getElementsByClassName('aplayer-pic')[0].style.backgroundImage = 'url(' + data.cover + ')';
                     el.getElementsByClassName('aplayer-list-light')[0].getElementsByClassName('aplayer-list-author')[0].innerHTML = data.artist
                 })
