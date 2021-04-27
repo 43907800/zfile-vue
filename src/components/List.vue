@@ -66,7 +66,7 @@
                     label="操作"
                     class-name="zfile-table-col-operator"
                     :min-width="common.isMobile() ? '35%' : '15%'">
-                <template slot="header">
+                <template slot="header" v-if="$store.getters.showLinkBtn">
                     <i class="el-icon-s-operation hidden-xs-only"></i>
                     <span>操作</span>
                     <el-tooltip class="item" effect="dark" content="批量生成直链" placement="top">
@@ -78,7 +78,7 @@
                         <el-tooltip class="item" effect="dark" content="下载" placement="top">
                             <i @click.stop="download(scope.row)" class="el-icon-download operator-btn"></i>
                         </el-tooltip>
-                        <el-tooltip class="item" effect="dark" content="生成直链" placement="top">
+                        <el-tooltip v-if="$store.getters.showLinkBtn" class="item" effect="dark" content="生成直链" placement="top">
                             <i @click.stop="copyShortLink(scope.row)" class="el-icon-copy-document operator-btn"></i>
                         </el-tooltip>
                     </div>
@@ -134,14 +134,14 @@
                         <el-form-item>
                             <el-input disabled prefix-icon="el-icon-coin" v-bind:value="currentCopyLinkRow.row.size | fileSizeFormat"></el-input>
                         </el-form-item>
-                        <el-form-item>
+                        <el-form-item v-if="$store.getters.showLinkBtn && $store.getters.showPathLink">
                             <el-input prefix-icon="el-icon-link" type="small" v-model="currentCopyLinkRow.directlink">
                                 <el-tooltip slot="append" class="item" effect="dark" content="复制" placement="bottom">
                                     <el-button @click="copyText(currentCopyLinkRow.directlink)" type="small" icon="el-icon-copy-document"></el-button>
                                 </el-tooltip>
                             </el-input>
                         </el-form-item>
-                        <el-form-item>
+                        <el-form-item v-if="$store.getters.showLinkBtn && $store.getters.showShortLink">
                             <el-input prefix-icon="el-icon-link" type="small" v-model="currentCopyLinkRow.link">
                                 <el-tooltip slot="append" class="item" effect="dark" content="复制" placement="bottom">
                                     <el-button @click="copyText(currentCopyLinkRow.link)" type="small" icon="el-icon-copy-document"></el-button>
@@ -163,7 +163,8 @@
                    :top="'80px'"
                    :visible.sync="dialogBatchCopyLinkVisible"
                    v-if="dialogBatchCopyLinkVisible">
-            <el-table :data="batchCopyLinkList" max-height="400">
+            <el-table v-loading="batchCopyLinkLoading"
+                      element-loading-text="生成直链中..." :data="batchCopyLinkList" max-height="400">
                 <el-table-column label="文件名称" prop="name">
                     <template slot="header">
                         <span>文件名称</span>
@@ -172,7 +173,7 @@
                         </el-tooltip>
                     </template>
                 </el-table-column>
-                <el-table-column label="短链" width="250px" prop="link1">
+                <el-table-column v-if="$store.getters.showLinkBtn && $store.getters.showShortLink" label="短链" width="250px" prop="link1">
                     <template slot="header">
                         <span>短链</span>
                         <el-tooltip class="item" effect="dark" content="批量复制" placement="top">
@@ -180,7 +181,7 @@
                         </el-tooltip>
                     </template>
                 </el-table-column>
-                <el-table-column label="直链" width="350px" show-overflow-tooltip prop="link2">
+                <el-table-column v-if="$store.getters.showLinkBtn && $store.getters.showPathLink" label="直链" width="350px" show-overflow-tooltip prop="link2">
                     <template slot="header">
                         <span>直链</span>
                         <el-tooltip class="item" effect="dark" content="批量复制" placement="top">
@@ -281,7 +282,8 @@
                     link: ''
                 },
                 dialogBatchCopyLinkVisible: false,
-                batchCopyLinkList: []
+                batchCopyLinkList: [],
+                batchCopyLinkLoading: false
             }
         },
         watch: {
@@ -309,27 +311,36 @@
             // 打开批量复制弹窗
             openBatchCopyLinkDialog() {
                 this.batchCopyLinkList = [];
-                this.$store.getters.tableData.forEach((item) => {
-                    if (item.type === 'FILE') {
-                        let directlink = this.common.removeDuplicateSeparator("/" + encodeURI(item.path) + "/" + encodeURI(item.name));
-
-                        this.$http.get('api/short-link', {params: {driveId: this.driveId, path: directlink}}).then((response) => {
-                            let link1 = response.data.data;
-                            let link2 = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/directlink/" + this.driveId + "/" + encodeURI(item.path) + "/" + encodeURI(item.name));
-                            const svgString = qrcode(response.data.data);
-                            let img = svg2url(svgString);
-
-                            this.batchCopyLinkList.push({
-                                name: item.name,
-                                link1: link1,
-                                link2: link2,
-                                img: img
-                            });
-                        });
-                    }
-                })
-
+                this.batchCopyLinkLoading = true;
+                this.loadLinkData(this.$store.getters.tableData[0], 0, this.$store.getters.tableData);
                 this.dialogBatchCopyLinkVisible = true;
+            },
+            loadLinkData(item, index, list) {
+                if (item === null || index >= list.length) {
+                    this.batchCopyLinkLoading = false;
+                    return;
+                }
+                index++;
+                if (item.type === 'FILE') {
+                    let directlink = this.common.removeDuplicateSeparator("/" + encodeURI(item.path) + "/" + encodeURI(item.name));
+
+                    this.$http.get('api/short-link', {params: {driveId: this.driveId, path: directlink}}).then((response) => {
+                        let link1 = response.data.data;
+                        let link2 = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/directlink/" + this.driveId + "/" + encodeURI(item.path) + "/" + encodeURI(item.name));
+                        const svgString = qrcode(response.data.data);
+                        let img = svg2url(svgString);
+
+                        this.batchCopyLinkList.push({
+                            name: item.name,
+                            link1: link1,
+                            link2: link2,
+                            img: img
+                        });
+                        this.loadLinkData(list[index], index, list);
+                    });
+                } else {
+                    this.loadLinkData(list[index], index, list);
+                }
             },
             // 排序按钮
             sortMethod({prop, order}) {
@@ -384,6 +395,11 @@
                     if (response.data.code === this.common.responseCode.REQUIRED_PASSWORD) {
                         this.$message.warning('此文件夹需要密码，请输入密码！');
                         this.popPassword();
+                        return;
+                    }
+
+                    if (response.data.code !== 0) {
+                        this.$message.warning(response.data.msg);
                         return;
                     }
 
@@ -486,6 +502,7 @@
                 this.dialogTextVisible = true;
             },
             openVideo() {
+                this.currentClickRow.url = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/directlink/" + this.driveId + "/" + encodeURI(this.currentClickRow.path) + "/" + encodeURI(this.currentClickRow.name));
                 this.dialogVideoVisible = true;
             },
             // 右键菜单

@@ -30,7 +30,7 @@
                 </el-select>
             </div>
         </el-form>
-        
+
         <el-dialog title="记录查询" :visible.sync="recordFormVisible" :width="dialogWidth">
             <el-form :model="recordForm" :inline="true" class="demo-form-inline" label-position="left">
                 <el-form-item label="用户名">
@@ -120,15 +120,15 @@
                     inputValue: username,
                     inputErrorMessage: '用户名不能为空.'
                 }).then(({value}) => {
-                    this.$cookies.set("username",value,-1); 
+                    this.$cookies.set("username",value,-1);
                     this.recordForm.userName = value;
-                    this.allRecord() 
+                    this.allRecord()
                 }).catch(() => {
 
                 });
             },
             allRecord() {
-                this.$cookies.set("username",this.recordForm.userName,-1); 
+                this.$cookies.set("username",this.recordForm.userName,-1);
                 this.recordForm.filePath =this.common.getPath();
                 this.$http.get('record/findUserRecord',{params: this.recordForm}).then((response) => {
                     let res = response.data;
@@ -145,14 +145,21 @@
                     });
 
                 })
+            },
+            refreshCurrentStorageStrategy() {
+              this.driveList.some((item) => {
+                if (item.id === this.currentDriveId) {
+                  this.$store.commit('updateCurrentStorageStrategy', item);
+                }
+              });
             }
-        },
+          },
         watch: {
             'currentDriveId': function (newVal, oldVal) {
                 this.$store.commit('updateOldDriveId', oldVal);
-                console.log('oldVal'+oldVal+'------newVal'+newVal)
-                if(oldVal){ // 不判断刷新会自动跳转
-                    this.$router.push('/' + newVal + '/main'); 
+                this.refreshCurrentStorageStrategy();
+                if (oldVal !== "") {
+                    this.$router.push('/' + newVal + '/main');
                 }
             },
             '$store.getters.newImgMode': function (newVal) {
@@ -186,11 +193,7 @@
                     this.$message.warning( '无可用驱动器，请先去管理员页初始化驱动器。');
                 }
 
-                this.driveList.some((item) => {
-                    if (item.id === this.currentDriveId) {
-                        this.$store.commit('updateCurrentStorageStrategy', item);
-                    }
-                });
+	            this.refreshCurrentStorageStrategy();
             });
         }
     }

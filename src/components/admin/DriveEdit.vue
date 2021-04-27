@@ -51,9 +51,6 @@
                                 每隔 N 秒检测到期的缓存, 对于过期缓存尝试调用 API, 重新写入缓存.
                                 <br>
                                 参数 N 在配置文件中设置 {zfile.cache.auto-refresh-interval}，默认为 5 秒。
-                                <br>
-                                <br>
-                                注意：如您的数据，并非
                             </div>
                             <i class="el-icon-info zfile-info-tooltip"></i>
                         </el-tooltip>
@@ -122,7 +119,7 @@
                         <div v-if="item.key === 'basePath'">
                             <el-tooltip placement="bottom">
                                 <div slot="content">
-                                    基路径表示从哪个路径开始文件, 不填写表示从根开始
+                                    基路径表示仅读取的文件夹, 不填写表示允许读取所有。如： '/', '/文件夹1'
                                 </div>
                                 <i class="el-icon-question zfile-info-tooltip"></i>
                             </el-tooltip>
@@ -141,10 +138,19 @@
                             </el-tooltip>
                         </div>
 
+	                    <div v-if="item.key === 'proxyDomain'">
+		                    <el-tooltip placement="bottom">
+			                    <div slot="content" style="cursor: pointer" @click="openUrl('http://docs.zhaojun.im/zfile/#/advanced?id=onedrive-cf')">
+				                    配置&使用文档（点击进入）
+			                    </div>
+			                    <i class="el-icon-question zfile-info-tooltip"></i>
+		                    </el-tooltip>
+	                    </div>
+
                         <div v-if="item.key === 'domain' && driveItem.type === 'ftp'">
                             <el-tooltip placement="bottom">
                                 <div slot="content">
-                                    此域名表示 http 访问域名，如有端口，也需要写明。
+                                    如次 ftp 目录同时也有 http 访问权限，则这里填写 http 访问域名，这样就会用 http 协议下载。防止 ftp 协议导致的密码泄露
                                 </div>
                                 <i class="el-icon-question zfile-info-tooltip"></i>
                             </el-tooltip>
@@ -239,7 +245,8 @@ export default {
                 basePath: "",
                 domain: "",
                 siteType: '/sites/',
-                siteId: ""
+                siteId: "",
+	            proxyDomain: ''
             },
         },
         supportStrategy: null
@@ -276,6 +283,9 @@ export default {
             loading: false,
             storageStrategyForm: [],
             rules: {
+	            'storageStrategyConfig.proxyDomain': [
+		            {required: true, type: 'url', message: '请输入正确的域名，需以 http:// 或 https:// 开头', trigger: 'change'},
+	            ],
                 siteName: [
                     {required: true, message: '请输入站点名称', trigger: 'change'},
                 ],
@@ -354,6 +364,9 @@ export default {
         }
     },
     methods: {
+    	openUrl(url) {
+		    window.open(url);
+	    },
         cacheChange(newVal) {
             if (!newVal) {
                 this.driveItem.autoRefreshCache = false;
