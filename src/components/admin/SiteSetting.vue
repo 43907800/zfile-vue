@@ -15,6 +15,7 @@
 
             <el-form-item class="box animate__animated animate__fadeInUp">
                 <el-button type="primary" size="small" @click="submitForm('form')">保存设置</el-button>
+                <router-link to="/admin/password" class="el-button el-button--warning el-button--small">修改密码</router-link>
             </el-form-item>
         </el-form>
     </el-card>

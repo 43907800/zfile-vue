@@ -18,6 +18,7 @@ const UpdatePassword = () => import(/* webpackChunkName: "admin" */'./components
 const API = () => import(/* webpackChunkName: "admin" */'./components/admin/API');
 const DriveList = () => import(/* webpackChunkName: "admin" */'./components/admin/DriveList');
 const ShortLink = () => import(/* webpackChunkName: "admin" */'./components/admin/ShortLink');
+const TypechoFiles = () => import(/* webpackChunkName: "admin" */'./components/admin/TypechoFiles');
 const SharePointSiteId = () => import(/* webpackChunkName: "admin" */'./components/SharePointSiteId');
 
 export default new Router({
@@ -78,6 +79,11 @@ export default new Router({
                     path: 'drive-list',
                     name: 'DriveList',
                     component: DriveList
+                },
+                {
+                    path: 'typecho-files',
+                    name: 'TypechoFiles',
+                    component: TypechoFiles
                 },
                 {
                     path: 'short-link',

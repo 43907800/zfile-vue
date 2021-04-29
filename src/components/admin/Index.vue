@@ -51,13 +51,17 @@
                         <i class="el-icon-link"/>
                         <span slot="title" id="/admin/short-link">短链管理</span>
                     </el-menu-item>
+                    <el-menu-item index="/admin/typecho-files">
+                        <i class="el-icon-connection"/>
+                        <span slot="title" id="/admin/typecho-files">文件夹</span>
+                    </el-menu-item>
                     <el-menu-item @click="logDownload">
                         <i class="el-icon-download"/>
-                        <span slot="title">日志下载</span>
+                        <span slot="title">日志</span>
                     </el-menu-item>
                     <el-menu-item @click="click">
                         <i class="el-icon-s-home"/>
-                        <span slot="title">前往首页</span>
+                        <span slot="title"></span>
                     </el-menu-item>
                     <el-menu-item @click="logout">
                         <i class="el-icon-switch-button"/>

@@ -157,6 +157,34 @@
             </el-row>
         </el-dialog>
 
+        <el-dialog title="添加到遍历任务" :visible.sync="ergodicDirAddFormVisible" width="30%" >
+            <el-form :model="ergodicForm" ref="ergodicForm" label-width="100px" label-position="right">
+                <el-form-item label="标题">
+                    <el-input v-model="ergodicForm.title" placeholder="标题"></el-input>
+                </el-form-item>
+                <el-form-item label="路径/文件夹">
+                    <el-input v-model="ergodicForm.filePath" placeholder="路径"></el-input>
+                </el-form-item>
+                <el-form-item label="分类">
+                    <el-select
+                        v-model="ergodicForm.category"
+                        filterable
+                        allow-create
+                        placeholder="请选择分类">
+                        <el-option
+                            v-for="item in categoryOptions"
+                            :key="item"
+                            :label="item"
+                            :value="item">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="saveErgodicDir()">确定</el-button>
+            </div>
+        </el-dialog>
+
         <el-dialog id="batchCopyLinkDialog"
                    title="批量生成直链"
                    width="80%"
@@ -206,6 +234,10 @@
             <v-contextmenu-item @click="copyShortLink(rightClickRow)" > <!--  v-show="rightClickRow.type === 'FILE'" -->
                 <i class="el-icon-copy-document"></i>
                 <label>生成直链</label>
+            </v-contextmenu-item>
+            <v-contextmenu-item @click="showErgodicDirDialog(rightClickRow)" v-show="rightClickRow.type === 'FOLDER'">
+                <i class="el-icon-connection"></i>
+                <label>遍历目录</label>
             </v-contextmenu-item>
             <v-contextmenu-item @click="allLink()" v-show="rightClickRow.type === 'FILE'">
                 <i class="el-icon-document"></i>
@@ -281,6 +313,14 @@
                     img: '',
                     link: ''
                 },
+                ergodicForm: {
+                    filePath: null,
+                    category: null,
+                    title: null,
+                    driveId: this.driveId,
+                },
+                ergodicDirAddFormVisible: false,
+                categoryOptions:[],
                 dialogBatchCopyLinkVisible: false,
                 batchCopyLinkList: [],
                 batchCopyLinkLoading: false
@@ -529,6 +569,34 @@
                     const svgString = qrcode(response.data.data);
                     this.currentCopyLinkRow.img = svg2url(svgString);
                     this.dialogCopyLinkVisible = true;
+                });
+            },
+            showErgodicDirDialog(row) {
+                this.ergodicDirAddFormVisible =true;
+                this.findCategory();
+
+                this.ergodicForm.filePath = "/" + row.path + "/" + row.name;
+                this.ergodicForm.title = row.name;
+                this.ergodicForm.driveId = this.driveId;
+                this.ergodicForm.status = 0;
+            },
+            findCategory(){
+                this.$http.get('api/ergodic/category', ).then((response) => {
+                    if (response.data.code === 0) {
+                        this.categoryOptions =response.data.data;
+                    }
+                });
+            },
+            saveErgodicDir(){
+                if ( !this.ergodicForm.category || !this.ergodicForm.filePath){
+                    this.$message.error('信息不完整! ');
+                    return;
+                }
+                this.$http.post('admin/ergodic', this.ergodicForm).then(() => {
+                    this.$message.success('保存成功!');
+                    this.ergodicDirAddFormVisible =false;
+                }, () => {
+                    this.$message.error('保存失败! ');
                 });
             },
             copyText(text) {

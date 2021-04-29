@@ -95,7 +95,12 @@ axios.get('zfile.config.json').then((result) => {
                 return response;
             }, error => {
                 let msg = error.response.data.msg;
-                if (msg === '未登录') {
+                // 请求的api
+                let url = error.response.config.url;
+                // 需要忽略跳转登录的api
+                let ignoreJumpArr =  ['admin/ergodic'];
+                let jump = ignoreJumpArr.indexOf(url) == -1;
+                if (msg === '未登录' && jump) {
                     this.$router.push('/login');
                 } else {
                     if (error.response.config.showMessage !== false) {
