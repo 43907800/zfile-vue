@@ -181,7 +181,12 @@
         },
         async mounted() {
             await this.$http.get('api/drive/list').then((response) => {
-                this.driveList = response.data.data;
+            	if (!response.data.data.isInstall) {
+		            this.$router.push('/install');
+            		return;
+	            }
+
+                this.driveList = response.data.data.driveList;
                 // 如果当前 URL 参数中有驱动器 ID, 则直接用当前的.
                 if (this.driveId) {
                     this.currentDriveId = Number(this.driveId);
@@ -190,7 +195,16 @@
                     this.currentDriveId = this.driveList[0].id;
                     this.$router.push('/' + this.driveList[0].id + '/main');
                 } else if (this.driveList.length === 0) {
-                    this.$message.warning( '无可用驱动器，请先去管理员页初始化驱动器。');
+	                this.$confirm('当前无可用驱动器，是否跳转至管理员页面添加驱动器？', '提示', {
+		                confirmButtonText: '确定',
+		                cancelButtonText: '取消',
+		                type: 'info',
+		                callback: action => {
+			                if (action === 'confirm') {
+				                this.$router.push('/login');
+			                }
+		                }
+	                });
                 }
 
 	            this.refreshCurrentStorageStrategy();

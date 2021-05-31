@@ -366,7 +366,7 @@
 
                     this.$http.get('api/short-link', {params: {driveId: this.driveId, path: directlink}}).then((response) => {
                         let link1 = response.data.data;
-                        let link2 = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/directlink/" + this.driveId + "/" + encodeURI(item.path) + "/" + encodeURI(item.name));
+                        let link2 = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/" + this.$store.getters.directLinkPrefix + "/" + this.driveId + "/" + encodeURI(item.path) + "/" + encodeURI(item.name));
                         const svgString = qrcode(response.data.data);
                         let img = svg2url(svgString);
 
@@ -425,7 +425,13 @@
                     orderDirection: this.searchParam.orderDirection,
                 };
 
+	            let requestDriveId = this.driveId;
                 this.$http.get(url, {params: param}).then((response) => {
+                	let currentDriveId = this.driveId;
+                	if (requestDriveId !== currentDriveId) {
+                		return;
+	                }
+
                     // 如果需要密码或密码错误进行提示, 并弹出输入密码的框.
                     if (response.data.code === this.common.responseCode.INVALID_PASSWORD) {
                         this.$message.error('密码错误，请重新输入！');
@@ -542,7 +548,7 @@
                 this.dialogTextVisible = true;
             },
             openVideo() {
-                this.currentClickRow.url = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/directlink/" + this.driveId + "/" + encodeURI(this.currentClickRow.path) + "/" + encodeURI(this.currentClickRow.name));
+	            this.currentClickRow.url = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/" + this.$store.getters.directLinkPrefix +"/" + this.driveId + "/" + encodeURI(this.currentClickRow.path) + "/" + encodeURI(this.currentClickRow.name));
                 this.dialogVideoVisible = true;
             },
             // 右键菜单
@@ -564,7 +570,7 @@
                 this.$http.get('api/short-link', {params: {driveId: this.driveId, path: directlink}}).then((response) => {
                     this.currentCopyLinkRow.row = row;
                     this.currentCopyLinkRow.link = response.data.data;
-                    let directlink = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/directlink/" + this.driveId + "/" + encodeURI(row.path) + "/" + encodeURI(row.name));
+                    let directlink = this.common.removeDuplicateSeparator(this.$store.getters.domain + "/" + this.$store.getters.directLinkPrefix + "/" + this.driveId + "/" + encodeURI(row.path) + "/" + encodeURI(row.name));
                     this.currentCopyLinkRow.directlink = directlink;
                     const svgString = qrcode(response.data.data);
                     this.currentCopyLinkRow.img = svg2url(svgString);
