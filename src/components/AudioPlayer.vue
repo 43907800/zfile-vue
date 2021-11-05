@@ -1,5 +1,5 @@
 <template>
-    <aplayer v-show="fileList.length > 0 && audioIndex !== -1" ref="aplayer" id="aplyer" fixed
+    <aplayer v-show="fileList.length > 0 && audioIndex !== -1" ref="aplayer" id="aplyer" fixed preload="none"
              :audio="fileList" @listSwitch="updateCover" loop='none'/>
 </template>
 
@@ -18,7 +18,7 @@
         methods: {
             updateCover() {
                 let currentMusic = this.$refs.aplayer.currentMusic;
-                
+
                 let filePath = currentMusic.path + currentMusic.name;
                 document.title = currentMusic.name;
                 if(this.fileList.length > 0 && this.audioIndex !== -1){
@@ -27,7 +27,7 @@
                 if (currentMusic.updateSrc) return;
                 let driveId = this.common.getDriveId();
 
-                this.$http.get('common/audio-info', {params: {url: currentMusic.url, filePath: filePath, driveId: driveId}}).then((response) => {
+                this.$http.get('/common/audio-info', {params: {url: currentMusic.url, filePath: filePath, driveId: driveId}}).then((response) => {
                     let data = response.data.data;
                     let el = this.$refs.aplayer.$el;
                     if (data.src != null && data.src != ''){

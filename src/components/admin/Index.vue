@@ -89,7 +89,7 @@
         },
         methods: {
             logout() {
-                this.$http.get('logout').then(() => {
+                this.$http.get('/logout').then(() => {
                     this.$router.push('/login');
                 })
             },

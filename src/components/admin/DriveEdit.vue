@@ -77,9 +77,13 @@
 
                         <el-col class="el-drive-form-col" :span="22">
                             <!-- Endpoint -->
-                            <el-select v-if="item.key === 'endPoint' && region.hasOwnProperty(driveItem.type)"
+                            <el-select filterable allow-create default-first-option v-if="item.key === 'endPoint' && region.hasOwnProperty(driveItem.type)"
+                                       style="width: 100%"
                                        v-model="driveItem.storageStrategyConfig.endPoint">
-                                <el-option v-for="endPoint in region[driveItem.type]" :label="endPoint.name" :value="endPoint.val" :key="endPoint.name"/>
+                                <el-option v-for="endPoint in region[driveItem.type]" :label="endPoint.name" :value="endPoint.val" :key="endPoint.name">
+	                                <span style="float: left">{{ endPoint.name }}</span>
+	                                <span style="float: right; color: #8492a6; font-size: 13px">{{endPoint.val}}</span>
+                                </el-option>
                             </el-select>
 
                             <!-- S3 PathStyle -->
@@ -116,6 +120,15 @@
                             <el-input v-else placeholder="" @input="change($event)" v-model="driveItem.storageStrategyConfig[item.key]"/>
                         </el-col>
 
+	                    <div v-if="item.key === 'endPoint'">
+		                    <el-tooltip placement="bottom">
+			                    <div slot="content">
+				                    如下拉列表中没有的区域, 或想使用内网地址, 可直接输入后回车, 如 oss-cn-beijing-internal.aliyuncs.com
+			                    </div>
+			                    <i class="el-icon-question zfile-info-tooltip"></i>
+		                    </el-tooltip>
+	                    </div>
+
                         <div v-if="item.key === 'basePath'">
                             <el-tooltip placement="bottom">
                                 <div slot="content">
@@ -133,6 +146,12 @@
                                     Windows 支持 C:/ 类的盘符开头.
                                     <br>
                                     结尾不需要加 <b>/</b>.
+	                                <br>
+	                                <br>
+	                                Docker 部署需提前映射宿主机路径！
+	                                <span slot="content" style="cursor: pointer; color: #4d9ff8" @click="openUrl('https://docs.docker.com/engine/reference/run/#volume-shared-filesystems')">
+		                                (配置文档)
+	                                </span>
                                 </div>
                                 <i class="el-icon-question zfile-info-tooltip"></i>
                             </el-tooltip>
@@ -306,7 +325,8 @@ export default {
                 ],
                 'storageStrategyConfig.domain': [
                     {
-                        validator: (rule, value, callback) => {
+	                    required: false,
+	                    validator: (rule, value, callback) => {
                             let domainCheck = /(http|https):\/\/([\w.]+\/?)\S*/
 
                             if ((value === undefined || value === '') && this.driveItem.type === 'ftp') {
@@ -376,11 +396,15 @@ export default {
             }
         },
         loadStrategyForm(val) {
-            this.$http.get('admin/strategy-form', {params: {storageType: val}}).then((response) => {
+            this.$http.get('/admin/strategy-form', {params: {storageType: val}}).then((response) => {
                 this.storageStrategyForm = response.data.data;
                 if (val === 'sharepoint' || val === 'sharepoint-china') {
                     this.driveItem.storageStrategyConfig.siteType = '/sites/';
                 }
+
+	            if (val !== 'ftp') {
+		            this.rules["storageStrategyConfig.domain"][0].required = true;
+	            }
             })
         },
         change() {
@@ -390,7 +414,7 @@ export default {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
                     this.loading = true;
-                    this.$http.post('admin/drive', this.driveItem).then((response) => {
+                    this.$http.post('/admin/drive', this.driveItem).then((response) => {
                         let data =  response.data;
                         this.$message({
                             message: data.msg,
